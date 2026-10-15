@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>绿循 · 校园垃圾分类积分（打卡版）</title>
+<style>
+  :root{
+    --green:#1f9d55; --green-d:#157a41; --green-l:#e9f7ef;
+    --ink:#1f2d27; --muted:#6b7b73; --line:#e3ece7; --bg:#f5f8f6;
+    --gold:#e6a817; --silver:#9fb0b8; --bronze:#c08457;
+    --red:#e3563a; --blue:#2f7de1;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+       background:var(--bg);color:var(--ink);font-size:15px;line-height:1.5}
+  .wrap{max-width:760px;margin:0 auto;padding:16px 16px 60px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 2px 14px}
+  .brand{display:flex;align-items:center;gap:10px}
+  .logo{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,var(--green),var(--green-d));
+        display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;font-weight:700}
+  .brand h1{font-size:18px;margin:0;font-weight:700}
+  .brand p{margin:0;font-size:12px;color:var(--muted)}
+  .admin-btn{background:#fff;border:1px solid var(--line);color:var(--green-d);font-weight:600;
+             padding:8px 14px;border-radius:10px;cursor:pointer;font-size:13px}
+  .admin-btn:active{transform:scale(.97)}
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px;
+        box-shadow:0 1px 3px rgba(20,40,30,.04)}
+  .card h2{font-size:15px;margin:0 0 12px;display:flex;align-items:center;gap:7px}
+  .card h2 .dot{width:8px;height:8px;border-radius:50%;background:var(--green)}
+  label{display:block;font-size:13px;color:var(--muted);margin:10px 0 5px}
+  input[type=text],input[type=password],select{width:100%;padding:11px 12px;border:1px solid var(--line);
+        border-radius:10px;font-size:15px;background:#fafdfb;color:var(--ink)}
+  input:focus,select:focus{outline:none;border-color:var(--green)}
+  .row{display:flex;gap:10px;flex-wrap:wrap}
+  .row>*{flex:1;min-width:0}
+  .btn{background:var(--green);color:#fff;border:none;padding:12px 16px;border-radius:11px;
+       font-size:15px;font-weight:600;cursor:pointer;width:100%;margin-top:12px}
+  .btn:active{transform:scale(.985)}
+  .btn.sub{background:#fff;color:var(--green-d);border:1px solid var(--green);margin-top:8px}
+  .btn.ghost{background:#fff;border:1px solid var(--line);color:var(--muted)}
+  .btn.danger{background:#fff;border:1px solid var(--red);color:var(--red)}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+  .chip{padding:10px 12px;border:2px solid var(--line);border-radius:12px;background:#fafdfb;
+        cursor:pointer;text-align:center;font-size:13px;flex:1;min-width:70px;font-weight:600;color:var(--muted)}
+  .chip .pts{display:block;font-size:11px;font-weight:500;margin-top:2px}
+  .chip.on{border-color:var(--green);background:var(--green-l);color:var(--green-d)}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:4px}
+  .stat{background:var(--green-l);border-radius:12px;padding:12px;text-align:center}
+  .stat .n{font-size:22px;font-weight:800;color:var(--green-d)}
+  .stat .t{font-size:12px;color:var(--muted);margin-top:2px}
+  .rank{display:flex;align-items:center;gap:12px;padding:11px 6px;border-bottom:1px solid var(--line)}
+  .rank:last-child{border-bottom:none}
+  .medal{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+         font-weight:800;color:#fff;font-size:14px;flex-shrink:0}
+  .m1{background:var(--gold)}.m2{background:var(--silver)}.m3{background:var(--bronze)}.m0{background:#cdd6d1;color:#fff}
+  .rank .who{flex:1;min-width:0}
+  .rank .who .id{font-weight:600;font-size:14px}
+  .rank .who .meta{font-size:12px;color:var(--muted)}
+  .rank .score{font-weight:800;color:var(--green-d);font-size:16px}
+  .rec{display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid var(--line);font-size:13px}
+  .rec:last-child{border-bottom:none}
+  .tag{padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;color:#fff}
+  .rec .ts{margin-left:auto;color:var(--muted);font-size:12px}
+  .me{background:var(--green-l);border:1px dashed var(--green);border-radius:14px;padding:16px;margin-bottom:14px}
+  .me .big{font-size:30px;font-weight:800;color:var(--green-d)}
+  .me .rank-badge{display:inline-block;background:var(--green);color:#fff;padding:3px 10px;border-radius:20px;font-size:13px;font-weight:700;margin-top:6px}
+  .notice{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.6}
+  .modal{position:fixed;inset:0;background:rgba(20,40,30,.45);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}
+  .modal.on{display:flex}
+  .sheet{background:#fff;border-radius:16px;padding:20px;width:100%;max-width:340px}
+  .sheet h3{margin:0 0 14px;font-size:16px}
+  .hidden{display:none!important}
+  .pill{display:inline-block;background:var(--green-l);color:var(--green-d);padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600}
+  .share-box{background:var(--green-l);border-radius:10px;padding:10px;font-size:12px;word-break:break-all;color:var(--green-d);margin-top:8px}
+  .ok{color:var(--green-d);font-size:13px;margin-top:8px;font-weight:600}
+  .sec-title{font-size:13px;color:var(--muted);font-weight:600;margin:16px 0 6px;text-transform:uppercase;letter-spacing:.5px}
+  footer{text-align:center;color:var(--muted);font-size:12px;margin-top:20px;line-height:1.7}
+  .tabs{display:flex;gap:6px;background:#eef3f0;padding:5px;border-radius:12px;margin-bottom:14px}
+  .tab{flex:1;text-align:center;padding:9px;border-radius:9px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer}
+  .tab.on{background:#fff;color:var(--green-d);box-shadow:0 1px 2px rgba(0,0,0,.05)}
+  .admin-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+  .admin-head .badge{background:var(--green);color:#fff;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700}
+  .out{background:none;border:none;color:var(--red);font-size:13px;cursor:pointer;font-weight:600}
+  .filter{display:flex;gap:8px;margin-bottom:8px}
+  .filter select{padding:7px 9px;font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="logo">♻</div>
+      <div>
+        <h1>绿循 · 垃圾分类积分</h1>
+        <p>校园打卡版 · 活动方可视化运营</p>
+      </div>
+    </div>
+    <button class="admin-btn" id="adminEntry">活动方入口</button>
+  </header>
+
+  <!-- ============ 公开视图（学生/分享链接） ============ -->
+  <div id="publicView">
+    <div id="personalCard"></div>
+
+    <div class="card" id="lookupCard">
+      <h2><span class="dot"></span>查我的积分</h2>
+      <label>输入学号</label>
+      <input type="text" id="lookupSid" placeholder="如 2021010123" />
+      <button class="btn" onclick="lookupMe()">查看积分与排名</button>
+      <div id="lookupResult"></div>
+    </div>
+
+    <div class="card">
+      <h2><span class="dot"></span>公开排行榜 · Top 20</h2>
+      <div id="publicRank"></div>
+    </div>
+
+    <footer>
+      绿循 · 校园垃圾分类激励系统（本地演示版）<br/>
+      数据存于本机浏览器 · 参赛原型用
+    </footer>
+  </div>
+
+  <!-- ============ 活动方视图（密码保护） ============ -->
+  <div id="adminView" class="hidden">
+    <div class="card">
+      <div class="admin-head">
+        <span class="badge">● 活动方后台</span>
+        <button class="out" onclick="adminLogout()">退出</button>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><div class="n" id="stPeople">0</div><div class="t">参与人数</div></div>
+        <div class="stat"><div class="n" id="stCount">0</div><div class="t">打卡次数</div></div>
+        <div class="stat"><div class="n" id="stPoints">0</div><div class="t">累计积分</div></div>
+      </div>
+    </div>
+
+    <!-- 打卡发放 -->
+    <div class="card">
+      <h2><span class="dot"></span>① 打卡发放积分</h2>
+      <label>学号</label>
+      <input type="text" id="aSid" placeholder="输入学生学号" />
+      <label>投放类型（点击选择，分值可改）</label>
+      <div class="chips" id="typeChips"></div>
+      <label>备注（可选）</label>
+      <input type="text" id="aNote" placeholder="如 7栋-厨余" />
+      <button class="btn" onclick="doCheckin()">✓ 确认打卡 +发放积分</button>
+      <div class="notice">每次打卡按所选类型的分值自动累加；同一学号重复打卡可叠加。</div>
+    </div>
+
+    <!-- 手动调整 -->
+    <div class="card">
+      <h2><span class="dot"></span>② 手动调整积分</h2>
+      <div class="row">
+        <div>
+          <label>学号</label>
+          <input type="text" id="mSid" placeholder="学号" />
+        </div>
+        <div>
+          <label>增减</label>
+          <input type="text" id="mAmt" placeholder="如 +5 或 -3" />
+        </div>
+      </div>
+      <button class="btn sub" onclick="doAdjust()">提交调整</button>
+    </div>
+
+    <!-- 积分规则 -->
+    <div class="card">
+      <h2><span class="dot"></span>③ 积分规则设置</h2>
+      <div id="ruleBox"></div>
+      <button class="btn sub" onclick="saveRules()">保存规则</button>
+    </div>
+
+    <!-- 记录 -->
+    <div class="card">
+      <h2><span class="dot"></span>④ 打卡记录</h2>
+      <div class="filter">
+        <select id="recFilter" onchange="renderAdminRecords()">
+          <option value="all">全部类型</option>
+          <option value="可回收物">可回收物</option>
+          <option value="厨余垃圾">厨余垃圾</option>
+          <option value="有害垃圾">有害垃圾</option>
+          <option value="其他垃圾">其他垃圾</option>
+          <option value="调整">手动调整</option>
+        </select>
+        <button class="btn ghost" style="width:auto;margin:0;padding:7px 14px" onclick="exportCSV()">导出CSV</button>
+      </div>
+      <div id="adminRecords"></div>
+    </div>
+
+    <!-- 系统 -->
+    <div class="card">
+      <h2><span class="dot"></span>⑤ 系统</h2>
+      <div class="sec-title">管理密码</div>
+      <div class="row">
+        <div><label>新密码</label><input type="password" id="pwNew" placeholder="设置/修改" /></div>
+        <div><label>确认</label><input type="password" id="pwOk" placeholder="再次输入" /></div>
+      </div>
+      <button class="btn sub" onclick="setPassword()">保存密码</button>
+      <div class="sec-title">演示与重置</div>
+      <button class="btn ghost" onclick="seedDemo()">灌入演示数据（32条）</button>
+      <button class="btn danger" onclick="wipeData()">清空全部数据</button>
+      <div class="notice">⚠️ 本页为参赛原型演示版：数据存本机浏览器、密码为轻量保护（非加密），正式上线需接入后端与数据库。</div>
+    </div>
+  </div>
+</div>
+
+<!-- 密码弹窗 -->
+<div class="modal" id="pwModal">
+  <div class="sheet">
+    <h3 id="pwTitle">活动方验证</h3>
+    <label>管理密码</label>
+    <input type="password" id="pwInput" placeholder="请输入密码" />
+    <button class="btn" onclick="tryUnlock()">进入后台</button>
+    <button class="btn ghost" onclick="closePw()">取消</button>
+    <div id="pwMsg" class="notice"></div>
+  </div>
+</div>
+
+<!-- 通用确认/提示弹窗（替代原生 confirm/alert，沙箱内可用） -->
+<div class="modal" id="dialog">
+  <div class="sheet">
+    <h3 id="dlgTitle">提示</h3>
+    <div id="dlgMsg" class="notice"></div>
+    <button class="btn" id="dlgOk">确定</button>
+    <button class="btn ghost hidden" id="dlgCancel">取消</button>
+  </div>
+</div>
+
+<script>
+/* ---------- 数据层 ---------- */
+const KEY="greenloop_db_v2";
+const DEF_RULES={"可回收物":10,"厨余垃圾":5,"有害垃圾":8,"其他垃圾":3};
+let DB=load();
+let locked=true;            // 后台是否解锁
+let curType=Object.keys(DEF_RULES)[0];
+
+function load(){
+  try{const d=JSON.parse(localStorage.getItem(KEY));if(d&&d.students)return d;}catch(e){}
+  return {students:{}, rules:DEF_RULES, password:"", set:false};
+}
+function save(){localStorage.setItem(KEY,JSON.stringify(DB));}
+function rules(){return DB.rules&&Object.keys(DB.rules).length?DB.rules:DEF_RULES;}
+
+function getStu(sid){
+  sid=String(sid).trim();
+  if(!DB.students[sid])DB.students[sid]={sid,points:0,count:0,recs:[]};
+  return DB.students[sid];
+}
+function addRec(sid,type,pts,note){
+  const s=getStu(sid);
+  s.points+=pts; s.count+=1;
+  s.recs.push({ts:Date.now(),type,pts,note:note||""});
+  save();
+}
+function fmtTime(ts){
+  const d=new Date(ts);
+  const p=n=>String(n).padStart(2,"0");
+  return `${d.getMonth()+1}/${d.getDate()} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+function mask(sid){
+  sid=String(sid);
+  if(sid.length<=6)return sid;
+  return sid.slice(0,4)+"****"+sid.slice(-2);
+}
+function rankList(){
+  return Object.values(DB.students).sort((a,b)=>b.points-a.points);
+}
+function tagColor(t){
+  return {"可回收物":"#2f7de1","厨余垃圾":"#1f9d55","有害垃圾":"#e3563a","其他垃圾":"#8a8f99","调整":"#9b6dd6"}[t]||"#8a8f99";
+}
+
+/* ---------- 公开视图 ---------- */
+function renderPublic(){
+  const list=rankList();
+  // 个人卡（分享链接）
+  const params=new URLSearchParams(location.search);
+  const sid=params.get("sid");
+  const pc=document.getElementById("personalCard");
+  if(sid && DB.students[sid]){
+    const s=DB.students[sid];
+    const rank=list.findIndex(x=>x.sid===sid)+1;
+    const total=list.length;
+    const rate=s.count? Math.round(100*s.count/s.count):0;
+    pc.innerHTML=`<div class="me">
+      <div class="pill">我的积分卡</div>
+      <div class="big">${s.points} <span style="font-size:14px;color:var(--muted)">分</span></div>
+      <div class="rank-badge">🏅 全校第 ${rank} / ${total} 名</div>
+      <div class="notice">学号 ${sid} · 打卡 ${s.count} 次 · 最近 ${s.recs.length?fmtTime(s.recs[s.recs.length-1].ts):"—"}</div>
+      <button class="btn sub" onclick="copyShare('${sid}')">📤 复制我的分享链接</button>
+    </div>`;
+  }else{pc.innerHTML="";}
+
+  // 排行榜
+  const pr=document.getElementById("publicRank");
+  if(!list.length){pr.innerHTML='<div class="notice">还没有打卡记录，喊活动方先开打卡吧～</div>';return;}
+  pr.innerHTML=list.slice(0,20).map((s,i)=>{
+    const medal=i<3?`<div class="medal m${i+1}">${i+1}</div>`:`<div class="medal m0">${i+1}</div>`;
+    return `<div class="rank">${medal}
+      <div class="who"><div class="id">${mask(s.sid)}</div>
+      <div class="meta">打卡 ${s.count} 次</div></div>
+      <div class="score">${s.points}</div></div>`;
+  }).join("");
+}
+function lookupMe(){
+  const sid=document.getElementById("lookupSid").value;
+  const box=document.getElementById("lookupResult");
+  if(!sid){box.innerHTML='<div class="notice">请输入学号</div>';return;}
+  if(!DB.students[sid]){box.innerHTML='<div class="notice">该学号暂无打卡记录</div>';return;}
+  const s=DB.students[sid];
+  const list=rankList();
+  const rank=list.findIndex(x=>x.sid===sid)+1;
+  box.innerHTML=`<div class="me" style="margin-top:10px">
+    <div class="big">${s.points} <span style="font-size:14px;color:var(--muted)">分</span></div>
+    <div class="rank-badge">🏅 第 ${rank} / ${list.length} 名</div>
+    <div class="notice">打卡 ${s.count} 次</div>
+    <button class="btn sub" onclick="copyShare('${sid}')">📤 复制我的分享链接</button>
+  </div>`;
+}
+function copyShare(sid){
+  const url=location.origin+location.pathname+"?sid="+encodeURIComponent(sid);
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(()=>showAlert("已复制","分享链接已复制到剪贴板，发给学生即可看到TA的积分与排名。"),
+      ()=>showAlert("分享链接",url+"\n\n（复制失败，请长按上方链接手动复制）"));
+  }else{
+    showAlert("分享链接",url+"\n\n（请长按上方链接手动复制）");
+  }
+}
+
+/* ---------- 后台 ---------- */
+function renderChips(){
+  const box=document.getElementById("typeChips");
+  const r=rules();
+  box.innerHTML=Object.keys(r).map(k=>
+    `<div class="chip ${k===curType?'on':''}" onclick="pickType('${k}')">${k}<span class="pts">+${r[k]}分</span></div>`
+  ).join("");
+}
+function pickType(k){curType=k;renderChips();}
+function renderRules(){
+  const box=document.getElementById("ruleBox");
+  const r=rules();
+  box.innerHTML=Object.keys(r).map(k=>
+    `<div class="row" style="margin-bottom:8px"><div style="flex:2"><label style="margin:0">${k}</label></div>
+     <div style="flex:1"><input type="text" id="rule_${k}" value="${r[k]}" /></div></div>`
+  ).join("");
+}
+function saveRules(){
+  const r=rules();const nr={};
+  Object.keys(r).forEach(k=>{const v=parseInt(document.getElementById("rule_"+k).value);nr[k]=isNaN(v)?r[k]:v;});
+  DB.rules=nr;save();renderChips();renderRules();
+  document.getElementById("recFilter"); // noop
+  flash("规则已保存");
+}
+function doCheckin(){
+  const sid=document.getElementById("aSid").value;
+  if(!sid){flash("请输入学号");return;}
+  const pts=rules()[curType]||0;
+  const note=document.getElementById("aNote").value;
+  addRec(sid,curType,pts,note);
+  flash(`已为 ${sid} 打卡：${curType} +${pts}分`);
+  document.getElementById("aSid").value="";document.getElementById("aNote").value="";
+  refreshAdmin();
+}
+function doAdjust(){
+  const sid=document.getElementById("mSid").value;
+  const amt=parseInt(document.getElementById("mAmt").value);
+  if(!sid){flash("请输入学号");return;}
+  if(isNaN(amt)){flash("增减值无效");return;}
+  addRec(sid,"调整",amt,document.getElementById("mSid").value?"手动调整":"");
+  flash(`已为 ${sid} 调整 ${amt>0?'+':''}${amt}分`);
+  document.getElementById("mSid").value="";document.getElementById("mAmt").value="";
+  refreshAdmin();
+}
+function renderAdminRecords(){
+  const f=document.getElementById("recFilter").value;
+  const all=[];
+  Object.values(DB.students).forEach(s=>s.recs.forEach(r=>all.push({sid:s.sid,...r})));
+  all.sort((a,b)=>b.ts-a.ts);
+  const box=document.getElementById("adminRecords");
+  const data=f==="all"?all:all.filter(r=>r.type===f);
+  if(!data.length){box.innerHTML='<div class="notice">暂无记录</div>';return;}
+  box.innerHTML=data.slice(0,80).map(r=>
+    `<div class="rec"><span class="tag" style="background:${tagColor(r.type)}">${r.type}</span>
+     <span>${mask(r.sid)}</span><span style="color:var(--muted)">${r.note||""}</span>
+     <span class="ts">${r.pts>0?'+':''}${r.pts} · ${fmtTime(r.ts)}</span></div>`
+  ).join("");
+}
+function refreshAdmin(){
+  const list=rankList();
+  document.getElementById("stPeople").textContent=list.length;
+  document.getElementById("stCount").textContent=list.reduce((a,s)=>a+s.count,0);
+  document.getElementById("stPoints").textContent=list.reduce((a,s)=>a+s.points,0);
+  renderAdminRecords();
+}
+function flash(msg){
+  // 轻量提示
+  let t=document.getElementById("flashToast");
+  if(!t){t=document.createElement("div");t.id="flashToast";
+    t.style.cssText="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1f9d55;color:#fff;padding:10px 18px;border-radius:24px;font-size:14px;font-weight:600;z-index:99;box-shadow:0 4px 14px rgba(0,0,0,.2)";
+    document.body.appendChild(t);}
+  t.textContent=msg;t.style.opacity="1";
+  clearTimeout(t._h);t._h=setTimeout(()=>t.style.opacity="0",1800);
+}
+function exportCSV(){
+  const all=[];
+  Object.values(DB.students).forEach(s=>s.recs.forEach(r=>all.push({sid:s.sid,...r})));
+  all.sort((a,b)=>b.ts-a.ts);
+  let csv="学号,类型,积分,备注,时间\n";
+  all.forEach(r=>{csv+=`${r.sid},${r.type},${r.pts},"${r.note||''}",${fmtTime(r.ts)}\n`;});
+  const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+  a.download="greenloop_records.csv";a.click();
+  flash("CSV 已导出");
+}
+function seedDemo(){
+  const types=["可回收物","厨余垃圾","有害垃圾","其他垃圾"];
+  for(let i=0;i<32;i++){
+    const sid="2021"+String(100000+i).padStart(6,"0").slice(-6);
+    const n=1+Math.floor(Math.random()*4);
+    for(let j=0;j<n;j++){
+      const t=types[Math.floor(Math.random()*types.length)];
+      addRec(sid,t,rules()[t]||0,"演示");
+    }
+  }
+  if(!locked)refreshAdmin();
+  renderPublic();
+  flash("已灌入 32 条演示数据");
+}
+function wipeData(){
+  showConfirm("清空全部数据","确定清空所有打卡记录？此操作不可恢复。",()=>{
+    DB.students={};save();
+    if(!locked)refreshAdmin();
+    renderPublic();
+    flash("数据已清空");
+  });
+}
+
+/* ---------- 密码 ---------- */
+function openPw(first){
+  document.getElementById("pwTitle").textContent=first?"首次设置管理密码":"活动方验证";
+  document.getElementById("pwMsg").textContent=first?"首次使用请设置管理密码：":"";
+  document.getElementById("pwInput").value="";
+  document.getElementById("pwModal").classList.add("on");
+  document.getElementById("pwInput").focus();
+}
+function closePw(){document.getElementById("pwModal").classList.remove("on");}
+function tryUnlock(){
+  const v=document.getElementById("pwInput").value;
+  if(!v){document.getElementById("pwMsg").textContent="请输入密码";return;}
+  if(!DB.set){ // 首次：直接设为密码
+    DB.password=hash(v);DB.set=true;save();
+    locked=false;closePw();showAdmin();flash("密码已设置，已进入后台");
+    return;
+  }
+  if(hash(v)===DB.password){locked=false;closePw();showAdmin();}
+  else{document.getElementById("pwMsg").textContent="密码错误，请重试";}
+}
+function setPassword(){
+  const a=document.getElementById("pwNew").value,b=document.getElementById("pwOk").value;
+  if(!a||a.length<4){flash("密码至少4位");return;}
+  if(a!==b){flash("两次输入不一致");return;}
+  DB.password=hash(a);DB.set=true;save();flash("管理密码已更新");
+  document.getElementById("pwNew").value="";document.getElementById("pwOk").value="";
+}
+function hash(s){ // 轻量混淆（非加密，仅挡随手查看）
+  let h=0;for(let i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))>>>0;}
+  return "g_"+h.toString(36);
+}
+function showAdmin(){
+  document.getElementById("publicView").classList.add("hidden");
+  document.getElementById("adminView").classList.remove("hidden");
+  renderChips();renderRules();refreshAdmin();
+}
+function adminLogout(){
+  locked=true;
+  document.getElementById("adminView").classList.add("hidden");
+  document.getElementById("publicView").classList.remove("hidden");
+  renderPublic();
+}
+document.getElementById("adminEntry").addEventListener("click",()=>{
+  if(!DB.set){openPw(true);return;}
+  if(locked){openPw(false);}else{showAdmin();}
+});
+document.getElementById("pwInput").addEventListener("keydown",e=>{if(e.key==="Enter")tryUnlock();});
+
+/* ---------- 通用弹窗（替代原生 confirm/alert） ---------- */
+let dlgYes=null;
+function showConfirm(title,msg,cb){
+  document.getElementById("dlgTitle").textContent=title;
+  document.getElementById("dlgMsg").textContent=msg;
+  document.getElementById("dlgCancel").classList.remove("hidden");
+  document.getElementById("dialog").classList.add("on");
+  dlgYes=cb;
+}
+function showAlert(title,msg){
+  document.getElementById("dlgTitle").textContent=title;
+  document.getElementById("dlgMsg").textContent=msg;
+  document.getElementById("dlgCancel").classList.add("hidden");
+  document.getElementById("dialog").classList.add("on");
+  dlgYes=null;
+}
+function dlgClose(){document.getElementById("dialog").classList.remove("on");}
+document.getElementById("dlgOk").addEventListener("click",()=>{
+  const cb=dlgYes;dlgClose();if(cb)cb();
+});
+document.getElementById("dlgCancel").addEventListener("click",dlgClose);
+
+/* ---------- 启动 ---------- */
+renderPublic();
+</script>
+</body>
+</html>
